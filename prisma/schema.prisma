@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String?
+  email        String        @unique
+  passwordHash String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  settings     UserSettings?
+  habits       Habit[]
+  checkins     DailyCheckin[]
+  journal      JournalEntry[]
+  dreams       Dream[]
+  quotes       WisdomQuote[]
+  notes        Note[]
+  progress     UserProgress?
+}
+
+model UserSettings {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  dayCloseHour          Int
+  animationsIntensity   String
+  perfectDayRule        String
+  dashboardWidgetsOrder Json
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id])
+}
+
+model Habit {
+  id           String   @id @default(cuid())
+  userId       String
+  name         String
+  icon         String
+  category     String
+  type         String
+  targetValue  Int?
+  scheduleMode String
+  scheduleDays Json?
+  timesPerWeek Int?
+  timeWindow   String
+  isEssential  Boolean
+  isActive     Boolean
+  xpReward     Int
+  pointsReward Int
+  sortOrder    Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id])
+  statuses     DailyHabitStatus[]
+}
+
+model DailyCheckin {
+  id                   String             @id @default(cuid())
+  userId               String
+  date                 DateTime
+  notes                String?
+  totalPlannedHabits   Int
+  totalCompletedHabits Int
+  percentComplete      Float
+  classification       String
+  xpEarned             Int
+  pointsEarned         Int
+  createdAt            DateTime           @default(now())
+  user                 User               @relation(fields: [userId], references: [id])
+  statuses             DailyHabitStatus[]
+
+  @@unique([userId, date])
+}
+
+model DailyHabitStatus {
+  id             String       @id @default(cuid())
+  dailyCheckinId String
+  habitId        String
+  valueBool      Boolean?
+  valueNumber    Int?
+  completed      Boolean
+  dailyCheckin   DailyCheckin @relation(fields: [dailyCheckinId], references: [id])
+  habit          Habit        @relation(fields: [habitId], references: [id])
+}
+
+model JournalEntry {
+  id           String   @id @default(cuid())
+  userId       String
+  date         DateTime
+  reflections  String
+  gratitude1   String?
+  gratitude2   String?
+  gratitude3   String?
+  emotions     Json
+  dayRating    Int
+  energyLevel  Int
+  stressLevel  Int
+  achievedToday String?
+  tomorrowGoals String?
+  isPrivate    Boolean
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, date])
+}
+
+model Dream {
+  id            String   @id @default(cuid())
+  userId        String
+  date          DateTime
+  title         String
+  content       String
+  emotions      Json
+  tags          Json
+  lucidDream    Boolean
+  recurringDream Boolean
+  clarityLevel  Int
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model WisdomQuote {
+  id         String   @id @default(cuid())
+  userId     String
+  quote      String
+  author     String?
+  category   String
+  isFavorite Boolean
+  source     String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model Note {
+  id              String   @id @default(cuid())
+  userId          String
+  title           String
+  contentMarkdown String
+  tags            Json
+  isFavorite      Boolean
+  isPinned        Boolean
+  color           String?
+  icon            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id])
+}
+
+model UserProgress {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  totalXp              Int
+  level                Int
+  points               Int
+  currentStreak        Int
+  bestStreak           Int
+  excellentDaysTotal   Int
+  perfectDaysTotal     Int
+  excellentStreak      Int
+  perfectStreak        Int
+  totalCheckins        Int
+  achievementsUnlocked Json
+  lastCheckinDate      DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  user                 User     @relation(fields: [userId], references: [id])
+}
